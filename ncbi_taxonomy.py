@@ -153,6 +153,8 @@ def main():
                     if not os.path.isfile(data_dir+"names.dmp") or not os.path.isfile(data_dir+"nodes.dmp") or args.download: downloadtax()
                     taxa = {}
                     readintaxa(taxa)
+                    
+                    taxonomyread = True
                 
                 if taxid in taxa:
                     rankings=[]
