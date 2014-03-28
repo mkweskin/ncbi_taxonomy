@@ -123,22 +123,37 @@ def main():
 
     args = readargs()
     #print args
-        
-    #Check that the input file exists or exit
-    if not os.path.isfile(args.FILE): sys.exit("ERROR: File \""+args.FILE+"\" does not exist")
-        
-    #Download the taxonomy files if they're not present or user has chosen to re-download
-    if not os.path.isfile(data_dir+"names.dmp") or not os.path.isfile(data_dir+"nodes.dmp") or args.download: downloadtax()
-    taxa = {}
-    readintaxa(taxa)
+    
+    taxonomyread = False
     
     #Parse input (filename given at program execution)
     endl = os.linesep
+    linecount = 0
     with open(args.FILE, 'r') as f:
         for line in f:
+            linecount += 1
             if not line.strip().startswith("#"):  #Ignore lines that start with #
                 values = line.strip(endl).split("\t")
-                taxid = values[args.column-1] #TO DO: CHECK THAT THE COLUMN EXISTS
+                if len(values) < args.column:
+                    sys.exit("ERROR: You said to look in column "+str(args.column)+" for taxon IDs, but line "+str(linecount)+" doesn\'t have that many columns, it has "+str(len(values)))
+                taxid = values[args.column-1].strip()
+                
+                #If a blast result has >1 taxon associated with it, BLAST returns a semicolon seperated list of taxon IDs. The script will use the first and give a warning
+                if len(taxid.split(";")) > 1:
+                    sys.stderr.write("WARNING: '"+str(taxid)+"' appears to contain >1 Taxon ID speperated by \';\', using the first\n")
+                    taxid = taxid.split(";")[0]
+                    taxid.strip()
+                
+                #Download and read taxonomy
+                if not taxonomyread:
+                    #Check that the input file exists before reading taxonomy (or exit)
+                    if not os.path.isfile(args.FILE): sys.exit("ERROR: File \""+args.FILE+"\" does not exist")
+    
+                    #Download the taxonomy files if they're not present or user has chosen to re-download
+                    if not os.path.isfile(data_dir+"names.dmp") or not os.path.isfile(data_dir+"nodes.dmp") or args.download: downloadtax()
+                    taxa = {}
+                    readintaxa(taxa)
+                
                 if taxid in taxa:
                     rankings=[]
                     lookuptaxa(taxa,taxid,rankings)
@@ -147,7 +162,8 @@ def main():
                     printranking(rankings, args.ranks)
                     print
                 else:
-                    sys.stderr.write("Taxa ID '"+taxid+"' not found") 
+                    sys.stderr.write("Taxa ID '"+str(taxid)+"' not found\n")
+                    print line.strip(endl)  #If Taxa ID isn't found, still output the original line
             else:
                 print line.strip(endl)
 
