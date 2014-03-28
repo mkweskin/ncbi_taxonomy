@@ -1,3 +1,4 @@
+#General use
 This script will download the NCBI taxonomy and then report the taxonomy of a given list of taxonomy IDs.
 
 The taxonomy database will be downloaded automatically from NCBI via FTP into a subfolder called "data".
@@ -38,3 +39,9 @@ Usage:
                                 genus"
           -d, --download        force a re-download of the current taxonomy database
                                 (WILL OVERWRITE PREVIOUS VERSION)
+
+#How to use NCBI BLAST with this
+This is one example of how to blast a fasta file to produce a file compatible with this taxonomy script:
+
+        blastn -remote -task megablast -db nt -evalue .001 -outfmt '7 qseqid sseqid pident length staxids salltitles ' -max_target_seqs 5 -query FILE.fasta >FILE.blast-out 2>/dev/null
+        python ncbi_taxonomy -c 5 FILE.blast-out >FILE-with-taxonomy.out
